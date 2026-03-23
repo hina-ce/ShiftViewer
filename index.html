@@ -120,6 +120,8 @@
 
     .nav-buttons {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
       gap: 10px;
     }
 
@@ -508,7 +510,8 @@
         width: 100%;
       }
 
-      .nav-button {
+      .nav-button,
+      .clear-button {
         flex: 1;
       }
 
@@ -589,6 +592,7 @@
               <h2 class="month-title" id="monthTitle"></h2>
             </div>
             <div class="nav-buttons">
+              <button class="nav-button" id="shareMonthButton" type="button" aria-label="表示中の月のシフトをコピーする">共有</button>
               <button class="nav-button" id="prevMonthButton" type="button" aria-label="前月へ">前月</button>
               <button class="nav-button" id="nextMonthButton" type="button" aria-label="次月へ">次月</button>
               <button class="clear-button" id="clearMonthButton" type="button" aria-label="表示中の月を全て休にする">クリア</button>
@@ -636,7 +640,7 @@
                 <strong id="nightCount">0</strong>
               </div>
               <div class="metric">
-                <span>出勤回数</span>
+                <span>勤務回数</span>
                 <strong id="workCount">0</strong>
               </div>
             </div>
@@ -665,6 +669,7 @@
               <li>カレンダーの左右スワイプ対応</li>
               <li>前月 / 次月ボタンでも移動可能</li>
               <li>ロックモードで誤動作防止</li>
+              <li>共有ボタンでテキストコピー(テスト中)</li>
             </ul>
           </section>
 
@@ -700,6 +705,7 @@
     const dayRateInput = document.getElementById("dayRateInput");
     const nightRateInput = document.getElementById("nightRateInput");
     const salaryValue = document.getElementById("salaryValue");
+    const shareMonthButton = document.getElementById("shareMonthButton");
     const prevMonthButton = document.getElementById("prevMonthButton");
     const nextMonthButton = document.getElementById("nextMonthButton");
     const clearMonthButton = document.getElementById("clearMonthButton");
@@ -724,6 +730,7 @@
     wireEvents();
 
     function wireEvents() {
+      shareMonthButton.addEventListener("click", handleShareMonth);
       prevMonthButton.addEventListener("click", () => moveMonth(-1));
       nextMonthButton.addEventListener("click", () => moveMonth(1));
       clearMonthButton.addEventListener("click", clearCurrentMonth);
@@ -864,14 +871,13 @@
         `;
       }).join("");
 
-      const dayShiftCount = monthState.shifts.filter((shift) => shift === "日").length;
-      const nightShiftCount = monthState.shifts.filter((shift) => shift === "夜").length;
-      const totalWorkDays = dayShiftCount + nightShiftCount;
-      const monthlyPay = dayShiftCount * toNumber(sharedSettings.dayRate) + nightShiftCount * toNumber(sharedSettings.nightRate);
+      const monthSummary = getMonthSummary(monthState.shifts);
+      const monthlyPay = monthSummary.dayShiftCount * toNumber(sharedSettings.dayRate)
+        + monthSummary.nightShiftCount * toNumber(sharedSettings.nightRate);
 
-      dayCount.textContent = String(dayShiftCount);
-      nightCount.textContent = String(nightShiftCount);
-      workCount.textContent = String(totalWorkDays);
+      dayCount.textContent = String(monthSummary.dayShiftCount);
+      nightCount.textContent = String(monthSummary.nightShiftCount);
+      workCount.textContent = String(monthSummary.totalWorkDays);
       salaryValue.textContent = formatCurrency(monthlyPay);
 
       // Ensure stale data never overflows the current month length.
@@ -924,6 +930,16 @@
       setStatus(`${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月の状態を全て「休」にしました。`);
     }
 
+    async function handleShareMonth() {
+      try {
+        await copyTextToClipboard(buildMonthShareText());
+        setStatus(`${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月のシフトをクリップボードにコピーしました。`);
+      } catch (error) {
+        console.error(error);
+        setStatus("シフトのコピーに失敗しました。ブラウザの権限設定や HTTPS 配信を確認してください。", true);
+      }
+    }
+
     function moveMonth(offset) {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
       render();
@@ -949,6 +965,81 @@
       }
 
       return entries;
+    }
+
+    function buildMonthShareText() {
+      const year = currentDate.getFullYear();
+      const monthIndex = currentDate.getMonth();
+      const monthState = getCurrentMonthState();
+      const daysInMonth = getDaysInMonth(year, monthIndex);
+      const monthSummary = getMonthSummary(monthState.shifts);
+      const dayLines = Array.from({ length: daysInMonth }, (_, index) => `${index + 1}日：${monthState.shifts[index]}`);
+
+      return [
+        `${year}年${monthIndex + 1}月`,
+        ...dayLines,
+        "",
+        `日勤回数：${monthSummary.dayShiftCount}回`,
+        `夜勤回数：${monthSummary.nightShiftCount}回`,
+        `勤務回数：${monthSummary.totalWorkDays}回`
+      ].join("\n");
+    }
+
+    function getMonthSummary(shifts) {
+      const dayShiftCount = shifts.filter((shift) => shift === "日").length;
+      const nightShiftCount = shifts.filter((shift) => shift === "夜").length;
+
+      return {
+        dayShiftCount,
+        nightShiftCount,
+        totalWorkDays: dayShiftCount + nightShiftCount
+      };
+    }
+
+    async function copyTextToClipboard(text) {
+      if (window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      if (fallbackCopyText(text)) {
+        return;
+      }
+
+      throw new Error("Clipboard API unavailable");
+    }
+
+    function fallbackCopyText(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.setAttribute("readonly", "");
+      textArea.style.position = "fixed";
+      textArea.style.top = "0";
+      textArea.style.left = "-9999px";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+
+      const selection = document.getSelection();
+      const originalRange = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
+      textArea.focus();
+      textArea.select();
+      textArea.setSelectionRange(0, textArea.value.length);
+
+      let copied = false;
+      try {
+        copied = document.execCommand("copy");
+      } finally {
+        textArea.remove();
+        if (selection) {
+          selection.removeAllRanges();
+          if (originalRange) {
+            selection.addRange(originalRange);
+          }
+        }
+      }
+
+      return copied;
     }
 
     function getCurrentMonthState() {
