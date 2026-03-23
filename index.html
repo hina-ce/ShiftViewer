@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="シフト管理">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>シフト管理カレンダー</title>
+  <title>シフト管理</title>
   <meta name="description" content="日勤・夜勤・明け・休みを月単位で管理できるシフト管理カレンダーです。">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
@@ -611,15 +611,13 @@
               <label class="mode-option" id="editModeOption">
                 <input type="radio" name="mode" value="edit">
                 <span>
-                  <strong>編集モード</strong>
-                  <span>状態ボタンを操作できます。</span>
+                  <strong>編集モード：状態変更可能</strong>
                 </span>
               </label>
               <label class="mode-option" id="lockModeOption">
                 <input type="radio" name="mode" value="lock">
                 <span>
-                  <strong>ロックモード</strong>
-                  <span>状態ボタンのみ操作できません。</span>
+                  <strong>ロックモード：状態変更不可能</strong>
                 </span>
               </label>
             </div>
@@ -645,11 +643,11 @@
             <div class="pay-form">
               <div class="field">
                 <label for="dayRateInput">日勤給与</label>
-                <input id="dayRateInput" inputmode="numeric" min="0" placeholder="例: 12000" type="number">
+                <input id="dayRateInput" inputmode="numeric" min="0" placeholder="例: 9000" type="number">
               </div>
               <div class="field">
                 <label for="nightRateInput">夜勤給与</label>
-                <input id="nightRateInput" inputmode="numeric" min="0" placeholder="例: 18000" type="number">
+                <input id="nightRateInput" inputmode="numeric" min="0" placeholder="例: 23400" type="number">
               </div>
             </div>
 
