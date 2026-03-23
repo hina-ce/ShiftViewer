@@ -642,28 +642,28 @@
 
             <div class="pay-form">
               <div class="field">
-                <label for="dayRateInput">日勤給与</label>
-                <input id="dayRateInput" inputmode="numeric" min="0" placeholder="例: 9000" type="number">
+                <label for="dayRateInput">日勤単価</label>
+                <input id="dayRateInput" inputmode="numeric" min="0" placeholder="例: 10000" type="number">
               </div>
               <div class="field">
-                <label for="nightRateInput">夜勤給与</label>
+                <label for="nightRateInput">夜勤単価</label>
                 <input id="nightRateInput" inputmode="numeric" min="0" placeholder="例: 23400" type="number">
               </div>
             </div>
 
             <div class="salary-box">
-              <p>額面月収（概算）</p>
+              <p>額面給与</p>
               <strong id="salaryValue">¥0</strong>
             </div>
           </section>
 
           <section class="helper-card">
-            <h2 class="card-title">使い方</h2>
-            <p>状態ボタンを押すたびに `日 → 夜 → 明 → 休` の順で切り替わります。夜勤を入れた翌日は月末を除き自動で「明」になります。</p>
+            <h2 class="card-title">操作方法</h2>
+            <p>状態ボタンを押すと `日 → 夜 → 明 → 休` の順で変更。月末を除き 夜 の次は 明 へ自動で変更</p>
             <ul class="guide-list">
-              <li>スマホではカレンダーを左右にスワイプして月を切り替えます。</li>
-              <li>PCでは前月 / 次月ボタンで移動できます。</li>
-              <li>ロックモード中も、モード切替自体はいつでも行えます。</li>
+              <li>カレンダーの左右スワイプ対応</li>
+              <li>前月 / 次月ボタンでも移動可能</li>
+              <li>ロックモードで誤動作防止</li>
             </ul>
           </section>
 
